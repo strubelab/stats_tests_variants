@@ -1,2 +1,7 @@
 env/
 data/
+.snakemake/
+env_stats/
+logs/
+__pycache__/
+results/

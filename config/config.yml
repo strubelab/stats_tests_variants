@@ -1,9 +1,13 @@
 benign_datasets:
   GM: data/gnomad_variants_mod2.pkl
+  AMb: data/AM_benign_mod.pkl
+  AMb30k: data/AM_benign_30k.pkl
 
 pathogenic_datasets:
   CV: data/clinvar_variants_mod2.pkl
+  AMp: data/AM_pathogenic_mod.pkl
+  AMp30k: data/AM_pathogenic_30k.pkl
 
 out_dir: results
-scripts_dir: scripts
+scripts_dir: workflow/scripts
 data_dir: data
