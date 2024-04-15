@@ -1,0 +1,79 @@
+configfile: "config/config.yml"
+
+RESULTS_DIR = config["out_dir"]
+SCRIPTS_DIR = config["scripts_dir"]
+DATA_DIR = config["data_dir"]
+
+rule all:
+    input:
+        expand(RESULTS_DIR + "/statistical_test/6_plot_test_pclasses_{benign_dataset}_{pathogenic_dataset}.png", 
+               benign_dataset=config["benign_datasets"], 
+               pathogenic_dataset=config["pathogenic_datasets"])
+
+rule data_preparation:
+    input:
+        benign=lambda wildcards: config["benign_datasets"][wildcards.benign_dataset],
+        pathogenic=lambda wildcards: config["pathogenic_datasets"][wildcards.pathogenic_dataset]
+    
+    output:
+        RESULTS_DIR + "/data_preparation/1_merged_{benign_dataset}_{pathogenic_dataset}.pkl"
+    
+    conda:
+        "envs/environment_stats.yml"
+    
+    shell:
+        """
+        python {SCRIPTS_DIR}/01_data_preparation.py \
+        {input.benign} \
+        {input.pathogenic} \
+        {output}
+        """
+
+rule assignment_physicochem:
+    input:
+        merged=RESULTS_DIR + "/data_preparation/1_merged_{benign_dataset}_{pathogenic_dataset}.pkl",
+        panther=DATA_DIR + "/PTHR17.0_human_clean_2.pkl"
+    
+    output:
+        features_all=RESULTS_DIR + "/assignment_physicochem/2_features_all_{benign_dataset}_{pathogenic_dataset}.pkl",
+        features_proteinclass=RESULTS_DIR + "/assignment_physicochem/3_features_proteinclass_{benign_dataset}_{pathogenic_dataset}.pkl",
+        features_geneboth=RESULTS_DIR + "/assignment_physicochem/4_features_geneboth_{benign_dataset}_{pathogenic_dataset}.pkl"
+    
+    conda:
+        "envs/environment_stats.yml"
+
+    shell:
+        """
+        python {SCRIPTS_DIR}/02_assignment_wrapper_physicochem.py \
+        {input.merged} \
+        {output.features_all} \
+        {output.features_proteinclass} \
+        {output.features_geneboth} \
+        {input.panther}
+        """
+
+
+rule statistical_test:
+    input:
+        features_all=RESULTS_DIR + "/assignment_physicochem/2_features_all_{benign_dataset}_{pathogenic_dataset}.pkl",
+        features_proteinclass=RESULTS_DIR + "/assignment_physicochem/3_features_proteinclass_{benign_dataset}_{pathogenic_dataset}.pkl"
+
+    output:
+        result_test_all=RESULTS_DIR + "/statistical_test/5_result_test_all_{benign_dataset}_{pathogenic_dataset}.pkl",
+        plot_test_all=RESULTS_DIR + "/statistical_test/5_plot_test_all_{benign_dataset}_{pathogenic_dataset}.png",
+        result_test_pclasses=RESULTS_DIR + "/statistical_test/6_result_test_pclasses_{benign_dataset}_{pathogenic_dataset}.pkl",
+        plot_test_pclasses=RESULTS_DIR + "/statistical_test/6_plot_test_pclasses_{benign_dataset}_{pathogenic_dataset}.png"
+    
+    conda:
+        "envs/environment_stats.yml"
+
+    shell:
+        """
+        python {SCRIPTS_DIR}/03_statistical_test.py \
+        {input.features_all} \
+        {input.features_proteinclass} \
+        {output.result_test_all} \
+        {output.plot_test_all} \
+        {output.result_test_pclasses} \
+        {output.plot_test_pclasses}
+        """

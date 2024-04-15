@@ -1,0 +1,9 @@
+benign_datasets:
+  GM: data/gnomad_variants_mod2.pkl
+
+pathogenic_datasets:
+  CV: data/clinvar_variants_mod2.pkl
+
+out_dir: results
+scripts_dir: scripts
+data_dir: data
