@@ -6,7 +6,10 @@ DATA_DIR = config["data_dir"]
 
 rule all:
     input:
-        expand(RESULTS_DIR + "/03_statistical_test/6_plot_test_pclasses_{benign_dataset}_{pathogenic_dataset}.png", 
+        expand(RESULTS_DIR + "/04_plot_all/5_plot_test_all_{benign_dataset}_{pathogenic_dataset}.png", 
+               benign_dataset=config["benign_datasets"], 
+               pathogenic_dataset=config["pathogenic_datasets"]),
+        expand(RESULTS_DIR + "/05_plot_pclasses/6_plot_test_pclasses_{benign_dataset}_{pathogenic_dataset}.png", 
                benign_dataset=config["benign_datasets"], 
                pathogenic_dataset=config["pathogenic_datasets"])
 
@@ -14,6 +17,11 @@ def get_mem_mb(wildcards, input):
     return max(10 * input.size_mb, 2000)
 
 rule data_preparation:
+    """
+    Merge the benign and pathogenic datasets and save the result to a pickle file
+    The input is the paths to the benign and pathogenic datasets
+    The output is a pickle file with the merged dataset
+    """
     input:
         benign=lambda wildcards: config["benign_datasets"][wildcards.benign_dataset],
         pathogenic=lambda wildcards: config["pathogenic_datasets"][wildcards.pathogenic_dataset]
@@ -40,6 +48,11 @@ rule data_preparation:
         """
 
 rule assignment_physicochem:
+    """
+    Assign physicochemical properties and categorical features to the merged dataset
+    The input is the merged dataset and the PANTHER database
+    The output is three pickle files with the features
+    """
     input:
         merged=RESULTS_DIR + "/01_data_preparation/1_merged_{benign_dataset}_{pathogenic_dataset}.pkl",
         panther=DATA_DIR + "/PTHR17.0_human_clean_2.pkl"
@@ -71,15 +84,18 @@ rule assignment_physicochem:
 
 
 rule statistical_test:
+    """
+    Compute the T-tests for all variants, and variants separated by protein class
+    The input is the features of the merged dataset
+    The output is two pickle files with the results
+    """
     input:
         features_all=RESULTS_DIR + "/02_assignment_physicochem/2_features_all_{benign_dataset}_{pathogenic_dataset}.pkl",
         features_proteinclass=RESULTS_DIR + "/02_assignment_physicochem/3_features_proteinclass_{benign_dataset}_{pathogenic_dataset}.pkl"
 
     output:
         result_test_all=RESULTS_DIR + "/03_statistical_test/5_result_test_all_{benign_dataset}_{pathogenic_dataset}.pkl",
-        plot_test_all=RESULTS_DIR + "/03_statistical_test/5_plot_test_all_{benign_dataset}_{pathogenic_dataset}.png",
-        result_test_pclasses=RESULTS_DIR + "/03_statistical_test/6_result_test_pclasses_{benign_dataset}_{pathogenic_dataset}.pkl",
-        plot_test_pclasses=RESULTS_DIR + "/03_statistical_test/6_plot_test_pclasses_{benign_dataset}_{pathogenic_dataset}.png"
+        result_test_pclasses=RESULTS_DIR + "/03_statistical_test/6_result_test_pclasses_{benign_dataset}_{pathogenic_dataset}.pkl"
     
     conda:
         "envs/environment_stats.yml"
@@ -97,7 +113,76 @@ rule statistical_test:
         {input.features_all} \
         {input.features_proteinclass} \
         {output.result_test_all} \
-        {output.plot_test_all} \
         {output.result_test_pclasses} \
-        {output.plot_test_pclasses} > {log.stdout} 2> {log.stderr}
+        > {log.stdout} 2> {log.stderr}
+        """
+
+rule plot_all:
+    """
+    Plot the results of the T-tests for all variants
+    The input is the results of the T-tests
+    The output is a plot
+    """
+    input:
+        result_test_all=RESULTS_DIR + "/03_statistical_test/5_result_test_all_{benign_dataset}_{pathogenic_dataset}.pkl"
+    
+    params:
+        name_benign=lambda wildcards: config["datasets_long_names"][wildcards.benign_dataset],
+        name_pathogenic=lambda wildcards: config["datasets_long_names"][wildcards.pathogenic_dataset]
+
+    output:
+        plot_test_all=RESULTS_DIR + "/04_plot_all/5_plot_test_all_{benign_dataset}_{pathogenic_dataset}.png",
+    
+    conda:
+        "envs/environment_stats.yml"
+
+    resources:
+        mem_mb=get_mem_mb
+
+    log:
+        stdout="logs/04_plot_all_{benign_dataset}_{pathogenic_dataset}.stdout",
+        stderr="logs/04_plot_all_{benign_dataset}_{pathogenic_dataset}.stderr"
+
+    shell:
+        """
+        python {SCRIPTS_DIR}/04_plot_test_all.py \
+        {input.result_test_all} \
+        {output.plot_test_all} \
+        "{params.name_benign} vs {params.name_pathogenic}" \
+        > {log.stdout} 2> {log.stderr}
+        """
+
+rule plot_pclasses:
+    """
+    Plot the results of the T-tests for variants separated by protein class
+    The input is the results of the T-tests
+    The output is a plot
+    """
+    input:
+        result_test_pclasses=RESULTS_DIR + "/03_statistical_test/6_result_test_pclasses_{benign_dataset}_{pathogenic_dataset}.pkl"
+
+    params:
+        name_benign=lambda wildcards: config["datasets_long_names"][wildcards.benign_dataset],
+        name_pathogenic=lambda wildcards: config["datasets_long_names"][wildcards.pathogenic_dataset]
+
+    output:
+        plot_test_pclasses=RESULTS_DIR + "/05_plot_pclasses/6_plot_test_pclasses_{benign_dataset}_{pathogenic_dataset}.png",
+    
+    conda:
+        "envs/environment_stats.yml"
+
+    resources:
+        mem_mb=get_mem_mb
+
+    log:
+        stdout="logs/05_plot_pclasses_{benign_dataset}_{pathogenic_dataset}.stdout",
+        stderr="logs/05_plot_pclasses_{benign_dataset}_{pathogenic_dataset}.stderr"
+
+    shell:
+        """
+        python {SCRIPTS_DIR}/05_plot_test_pclasses.py \
+        {input.result_test_pclasses} \
+        {output.plot_test_pclasses} \
+        "{params.name_benign} vs {params.name_pathogenic}" \
+        > {log.stdout} 2> {log.stderr}
         """

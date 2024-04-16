@@ -22,16 +22,13 @@ def parsing(args: list=None) -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     
-    parser.add_argument("path_physicochemical", type=str,
-                        help=("Path to the pickle file with all the variants "
-                              "and their physicochemical properties"))
-    parser.add_argument("path_proteinclass", type=str,
-                        help="Path to the protein class pickle file")
-    parser.add_argument("result_test_all", type=str,
-                        help="Path to the result file for the test of all variants")
     parser.add_argument("result_test_pclasses", type=str,
                         help=("Path to the result file for the test of variants "
                               "by protein classes"))
+    parser.add_argument("plot_test_pclasses", type=str,
+                        help=("Path to the plot file for the test of variants "
+                              "by protein classes"))
+    parser.add_argument("plot_title", type=str, help="Title of the plot")
     
     return parser.parse_args(args)
 
@@ -41,44 +38,6 @@ def parsing(args: list=None) -> argparse.Namespace:
 if __name__ == '__main__':
     
     args = parsing()
-    
-    # Selected by cecilia in 02_StatisticalTest.ipynb
-    features_test_all = [
-        'TotalEnergy',
-        'LessTotalEnergy',
-        'VanDerWaalsClashes',
-        'Contacts',
-        'Conserved',
-        'Core (<5%)',
-        'Buried (5-25%)',
-        'Medium-buried (25-50%)',
-        'Medium-exposed (50-75%)',
-        'Exposed (>75%)',
-        'DisorderpLDDT',
-        'OrderpLDDT',
-        # 'helices',
-        # 'β-sheet/strand',
-        # 'coils',
-        'α-helix',
-        'βbridge',
-        'strandβladder',
-        '310helix',
-        'π-helix',
-        # 'HBondTurn',
-        # 'Bend',
-        'Loop',
-        'Small to Big',
-        'Big to Small',
-        'Polar to NonPolar',
-        'NonPolar to Polar',
-        'Hydrophilic introduced',
-        'Hydrophobic introduced',
-        'Charge switch',
-        'Charge lost',
-        'Charge gain',
-        'Aromatic to NonAromatic',
-        'Aromatic to polar',
-    ]
     
     # Exclude βbridge and π-helix, and sort by the number of protein classes with
     # significant ORs, in the analysis of gnomAD vs ClinVar
@@ -155,21 +114,9 @@ if __name__ == '__main__':
     ]
     
     
-    variants = pd.read_pickle(args.path_physicochemical)
-    variants_pclasses = pd.read_pickle(args.path_proteinclass)
+    results = pd.read_pickle(args.result_test_pclasses)
     
-    # Test of all variants
-    sum_results = stathelper.calculate_ODS_mult(features_test_all, variants)
-    sum_results = sum_results.dropna(subset=['OR'])
-    sum_results = sum_results.sort_values('OR', ascending=False)
-    
-    print(f"Writing results of all variants to {args.result_test_all}...")
-    sum_results.to_pickle(args.result_test_all)
-    
-    # Test of variants by protein classes
-    groupbyName = 'GeneralProteinClass'
-    results = stathelper.calculate_ODS_multiple_grouped_by(pclasses, groupbyName,
-                                        features_test_pclasses, variants_pclasses)
-    
-    print(f"Writing results of variants by protein classes to {args.result_test_pclasses}...")
-    results.to_pickle(args.result_test_pclasses)
+    print(f"Plotting results of variants by protein classes to {args.plot_test_pclasses}...")
+    stathelper.plot_heatmap(results, args.plot_title,
+                            features_test_pclasses, ['All']+pclasses,
+                            figpath=args.plot_test_pclasses)

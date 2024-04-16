@@ -264,9 +264,8 @@ def add_label_band(ax, top, bottom, label, *, spine_pos=-0.45, tip_pos=-0.02,
 
 
 
-def plot_ODS(test_features:pd.DataFrame, figpath:str=None, show=False):
-
-
+def plot_ODS(test_features:pd.DataFrame, title:str, figpath:str=None,
+             show=False):
     """
     Parameters
     ------------------ 
@@ -342,6 +341,9 @@ def plot_ODS(test_features:pd.DataFrame, figpath:str=None, show=False):
     ## ADD XVALUE TO PLOT
     ## remove vertical gridlines
     
+    # Add title
+    ax.set_title(title, fontdict={'fontsize': 14, 'fontweight': 'bold'})
+    
     if figpath:
         plt.savefig(figpath, bbox_inches='tight', facecolor='white', dpi=150)
     
@@ -350,8 +352,8 @@ def plot_ODS(test_features:pd.DataFrame, figpath:str=None, show=False):
 
 
 
-def plot_heatmap(test_features_groupby, list_with_formated_names, list_order,
-                 figpath:str=None, show=False):
+def plot_heatmap(test_features_groupby, title:str, list_with_formated_names,
+                 list_order, figpath:str=None, show=False):
     """
     Function to obtain a heatmap 
      Parameters
@@ -418,6 +420,9 @@ def plot_heatmap(test_features_groupby, list_with_formated_names, list_order,
     plot.set(xlabel=None, ylabel=None)
 
     sns.set(font_scale=1.4)
+    
+    # Add title
+    ax.set_title(title, fontdict={'fontsize': 44, 'fontweight': 'bold'}, pad=20)
     
     if figpath:
         plt.savefig(figpath, bbox_inches='tight', facecolor='white', dpi=150)

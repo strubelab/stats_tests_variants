@@ -166,10 +166,10 @@ def getting_ref_aa_properties(variants:pd.DataFrame, AA_GIVEN:bool=False):
         variants.apply(lambda row: 'helices' 
                        if (row['secondary_structure'] in helices) 
                        else 'not_helices', axis=1))
-    variants['β-sheet/starnd'] = (
-        variants.apply(lambda row: 'β-sheet/starnd' 
+    variants['β-sheet/strand'] = (
+        variants.apply(lambda row: 'β-sheet/strand' 
                        if (row['secondary_structure'] in βetas) 
-                       else 'not_β-sheet/starnd', axis=1))
+                       else 'not_β-sheet/strand', axis=1))
     variants['coils'] = (
         variants.apply(lambda row: 'coils' 
                        if (row['secondary_structure'] in coils) 
