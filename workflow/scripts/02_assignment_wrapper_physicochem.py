@@ -301,6 +301,7 @@ if __name__ == '__main__':
     variants = pd.read_pickle(args.variants)
     path_results = args.destination_physicochemical
     
+    # Assign binary features to the variants
     AA_GIVEN = True
     variants = getting_ref_aa_properties(variants, AA_GIVEN)
     
@@ -334,7 +335,8 @@ if __name__ == '__main__':
 
 
 
-    # Select only the genes that are in both benign and pathogenic datasets
+    # Select only variants from the genes that are in both benign and pathogenic datasets
+    # (not used so far)
     pathogenic_rows = clinvar_gnomad_class_filt[
                         clinvar_gnomad_class_filt['Source'] == 'Pathogenic']
     common_rows = clinvar_gnomad_class_filt[
