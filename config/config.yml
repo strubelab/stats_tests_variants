@@ -19,3 +19,4 @@ datasets_long_names:
 out_dir: results
 scripts_dir: workflow/scripts
 data_dir: data
+log_dir: logs

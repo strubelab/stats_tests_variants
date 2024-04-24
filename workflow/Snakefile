@@ -3,6 +3,7 @@ configfile: "config/config.yml"
 RESULTS_DIR = config["out_dir"]
 SCRIPTS_DIR = config["scripts_dir"]
 DATA_DIR = config["data_dir"]
+LOG_DIR = config["log_dir"]
 
 rule all:
     input:
@@ -13,8 +14,10 @@ rule all:
                benign_dataset=config["benign_datasets"], 
                pathogenic_dataset=config["pathogenic_datasets"])
 
+
 def get_mem_mb(wildcards, input):
     return max(10 * input.size_mb, 2000)
+
 
 rule data_preparation:
     """
@@ -36,16 +39,16 @@ rule data_preparation:
         mem_mb=get_mem_mb
 
     log:
-        stdout="logs/01_data_preparation_{benign_dataset}_{pathogenic_dataset}.stdout",
-        stderr="logs/02_data_preparation_{benign_dataset}_{pathogenic_dataset}.stderr"
+        stdout=LOG_DIR + "/01_data_preparation_{benign_dataset}_{pathogenic_dataset}.stdout"
     
     shell:
         """
         python {SCRIPTS_DIR}/01_data_preparation.py \
         {input.benign} \
         {input.pathogenic} \
-        {output} > {log.stdout} 2> {log.stderr}
+        {output} > {log.stdout} 2>&1
         """
+
 
 rule assignment_physicochem:
     """
@@ -69,8 +72,7 @@ rule assignment_physicochem:
         mem_mb=get_mem_mb
 
     log:
-        stdout="logs/02_assignment_physicochem_{benign_dataset}_{pathogenic_dataset}.stdout",
-        stderr="logs/02_assignment_physicochem_{benign_dataset}_{pathogenic_dataset}.stderr"
+        stdout=LOG_DIR + "/02_assignment_physicochem_{benign_dataset}_{pathogenic_dataset}.stdout"
 
     shell:
         """
@@ -79,7 +81,7 @@ rule assignment_physicochem:
         {output.features_all} \
         {output.features_proteinclass} \
         {output.features_geneboth} \
-        {input.panther} > {log.stdout} 2> {log.stderr}
+        {input.panther} > {log.stdout} 2>&1
         """
 
 
@@ -104,8 +106,7 @@ rule statistical_test:
         mem_mb=get_mem_mb
 
     log:
-        stdout="logs/03_statistical_test_{benign_dataset}_{pathogenic_dataset}.stdout",
-        stderr="logs/03_statistical_test_{benign_dataset}_{pathogenic_dataset}.stderr"
+        stdout=LOG_DIR + "/03_statistical_test_{benign_dataset}_{pathogenic_dataset}.stdout"
 
     shell:
         """
@@ -114,8 +115,9 @@ rule statistical_test:
         {input.features_proteinclass} \
         {output.result_test_all} \
         {output.result_test_pclasses} \
-        > {log.stdout} 2> {log.stderr}
+        > {log.stdout} 2>&1
         """
+
 
 rule plot_all:
     """
@@ -140,8 +142,7 @@ rule plot_all:
         mem_mb=get_mem_mb
 
     log:
-        stdout="logs/04_plot_all_{benign_dataset}_{pathogenic_dataset}.stdout",
-        stderr="logs/04_plot_all_{benign_dataset}_{pathogenic_dataset}.stderr"
+        stdout=LOG_DIR + "/04_plot_all_{benign_dataset}_{pathogenic_dataset}.stdout"
 
     shell:
         """
@@ -149,7 +150,7 @@ rule plot_all:
         {input.result_test_all} \
         {output.plot_test_all} \
         "{params.name_benign} vs {params.name_pathogenic}" \
-        > {log.stdout} 2> {log.stderr}
+        > {log.stdout} 2>&1
         """
 
 rule plot_pclasses:
@@ -175,8 +176,7 @@ rule plot_pclasses:
         mem_mb=get_mem_mb
 
     log:
-        stdout="logs/05_plot_pclasses_{benign_dataset}_{pathogenic_dataset}.stdout",
-        stderr="logs/05_plot_pclasses_{benign_dataset}_{pathogenic_dataset}.stderr"
+        stdout=LOG_DIR + "/05_plot_pclasses_{benign_dataset}_{pathogenic_dataset}.stdout"
 
     shell:
         """
@@ -184,5 +184,5 @@ rule plot_pclasses:
         {input.result_test_pclasses} \
         {output.plot_test_pclasses} \
         "{params.name_benign} vs {params.name_pathogenic}" \
-        > {log.stdout} 2> {log.stderr}
+        > {log.stdout} 2>&1
         """
