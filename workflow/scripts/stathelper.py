@@ -325,7 +325,7 @@ def plot_ODS(test_features:pd.DataFrame, title:str, figpath:str=None,
     # plt.axhline(y=12, linewidth=1.5, linestyle='--', color='black')
 
     # Change x axis to log scale
-    plt.xscale('log')
+    # plt.xscale('log')
 
     plt.tick_params(axis='both', which='major', labelsize=12)
     plt.xlabel('Odds Ratio and 95% Confidence Interval', fontsize=12,
