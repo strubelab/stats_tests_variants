@@ -6,3 +6,6 @@ logs/
 __pycache__/
 results/
 .DS_Store
+logs*/
+results*/
+out_ibex/*.out

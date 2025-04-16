@@ -16,7 +16,7 @@ datasets_long_names:
   AMp: AlphaMissense_pathogenic
   AMp30k: AlphaMissense_pathogenic30k
 
-out_dir: results
+out_dir: results_repeat
 scripts_dir: workflow/scripts
 data_dir: data
-log_dir: logs
+log_dir: logs_repeat
